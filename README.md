@@ -45,42 +45,21 @@ $ echo -e "time:2014-08-13T14:10:10Z\tstatus:200\ntime:2014-08-13T14:10:12Z\tsta
 
 Useful!
 
-## Installation
-
-Executable binaries are available at [releases](https://github.com/sonots/rust-lltsv/releases).
-
-For example, for linux x86_64,
-
-```bash
-$ wget https://github.com/sonots/rust-lltsv/releases/download/v0.3.0/lltsv_linux_amd64 -O lltsv
-$ chmod a+x lltsv
-```
-
 ## Usage
 
 ```
 $ lltsv -h
-NAME:
-   lltsv - List specified keys of LTSV (Labeled Tab Separated Values)
-
 USAGE:
-   lltsv [global options] command [command options] [arguments...]
+    lltsv [OPTIONS] [FILENAME]...
 
-VERSION:
-   0.0.1
+ARGS:
+    <FILENAME>...    Set the input file(s)
 
-AUTHOR(S):
-   sonots <sonots@gmail.com>
-
-COMMANDS:
-   help, h      Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --key, -k                                            keys to output (multiple keys separated by ,)
-   --no-key, -K                                         output without keys (and without color)
-   --ignore-key value, -i value                         ignored keys to output (multiple keys separated by ,)
-   --help, -h                                           show help
-   --version, -v                                        print the version
+OPTIONS:
+    -h, --help             Print help information
+    -i <ignore-key>        ignored keys to output (multiple keys separated by ,)
+    -k <key>               keys to output (multiple keys separated by ,)
+    -K                     output without keys (and without color)
 ```
 
 ## ToDo
