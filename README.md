@@ -49,17 +49,19 @@ Useful!
 
 ```
 $ lltsv -h
-USAGE:
-    lltsv [OPTIONS] [FILENAME]...
+lltsv - List specified keys of LTSV (Labeled Tab Separated Values)
 
-ARGS:
-    <FILENAME>...    Set the input file(s)
+Usage: lltsv [OPTIONS] [FILENAME]...
 
-OPTIONS:
-    -h, --help             Print help information
-    -i <ignore-key>        ignored keys to output (multiple keys separated by ,)
-    -k <key>               keys to output (multiple keys separated by ,)
-    -K                     output without keys (and without color)
+Arguments:
+  [FILENAME]...  Set the input file(s)
+
+Options:
+  -k, --key <KEY>                keys to output (multiple keys separated by ,)
+  -K, --no-key                   output without keys (and without color)
+  -i, --ignore-key <IGNORE_KEY>  ignored keys to output (multiple keys separated by ,)
+  -h, --help                     Print help
+  -V, --version                  Print version
 ```
 
 ## ToDo
