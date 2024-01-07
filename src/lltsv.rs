@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::BTreeMap;
 use std::io::{self, Read, BufRead};
 
 pub struct Lltsv<'a> {
     keys: Vec<&'a str>,
-    ignore_key_map: HashMap<&'a str, ()>,
+    ignore_key_set: HashSet<&'a str>,
     no_key: bool,
     // func_append: tFuncAppend,
 }
@@ -14,14 +15,14 @@ impl Lltsv<'_> {
         ignore_keys: Vec<&'a str>,
         no_key: bool,
     ) -> Lltsv<'a> {
-        let mut ignore_key_map = HashMap::new();
+        let mut ignore_key_set = HashSet::new();
         for key in ignore_keys {
-            ignore_key_map.insert(key, ());
+            ignore_key_set.insert(key);
         }
 
         Lltsv {
             keys,
-            ignore_key_map,
+            ignore_key_set,
             no_key,
         }
     }
@@ -31,53 +32,58 @@ impl Lltsv<'_> {
 
         for line in reader.lines() {
             let line = line?;
-            let (lvs, labels) = self.parse_ltsv(&line);
-            let restructed = self.restruct_ltsv(lvs, labels);
+            if line.is_empty() {
+                continue;
+            }
+            let lvs = self.parse_ltsv(&line);
+            let restructed = self.restruct_ltsv(lvs);
             println!("{}", restructed);
         }
 
         Ok(())
     }
 
-    fn restruct_ltsv(&self, lvs: HashMap<String, String>, labels: Vec<&str>) -> String {
+    fn restruct_ltsv(&self, lvs: BTreeMap<&str, &str>) -> String {
         //  Sort in the order of -k, or follow the order of the input file.
-        let orders = if self.keys.is_empty() {
-            &labels
+        let keys: Vec<&str>; // just to make it alive orders_ref
+        let orders_ref: &Vec<&str> = if self.keys.is_empty() {
+            keys = lvs.keys().cloned().collect();
+            &keys
         } else {
             &self.keys
         };
-        // Make vector with enough capacity so that push does not newly create object
-        let mut selected = Vec::with_capacity(orders.len());
-        let default_value = String::from("");
-        for label_ref in orders {
-            if self.ignore_key_map.contains_key(label_ref) {
-                continue;
+        if self.no_key {
+            let mut selected = Vec::with_capacity(orders_ref.len());
+            for label_ref in orders_ref {
+                let value = lvs.get(label_ref).unwrap_or(&"");
+                selected.push(*value);
             }
-            // TODO: any ways to avoid copying?
-            let label = label_ref.to_string();
-            let value = lvs.get(&label).unwrap_or(&default_value);
-            if self.no_key {
-                selected.push(value.to_string());
-            } else {
+            selected.join("\t")
+        } else {
+            let mut selected = Vec::with_capacity(orders_ref.len());
+            for label_ref in orders_ref {
+                let label = label_ref.to_string();
+                let value = lvs.get(label_ref).unwrap_or(&"");
                 selected.push(label + ":" + value);
             }
+            selected.iter().map(|s| s.as_str()).collect::<Vec<&str>>().join("\t")
         }
-        selected.iter().map(|s| s.as_str()).collect::<Vec<&str>>().join("\t")
     }
 
-    fn parse_ltsv<'a>(&'a self, line: &'a str) -> (HashMap<String, String>, Vec<&str>) {
+    fn parse_ltsv<'a>(&'a self, line: &'a str) -> BTreeMap<&'a str, &'a str> {
         let columns: Vec<&str> = line.split('\t').collect();
-        let mut lvs = HashMap::new();
-        let mut labels = Vec::with_capacity(columns.len());
+        let mut lvs = BTreeMap::new();
         for column in columns {
             let lv: Vec<&str> = column.splitn(2, ':').collect();
             if lv.len() < 2 {
                 continue;
             }
             let (label, value) = (lv[0], lv[1]);
-            labels.push(label);
-            lvs.insert(label.to_string(), value.to_string());
+            if self.ignore_key_set.contains(label) {
+                continue;
+            }
+            lvs.insert(label, value);
         }
-        (lvs, labels)
+        lvs
     }
 }
