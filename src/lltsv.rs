@@ -2,10 +2,14 @@ use std::collections::HashSet;
 use std::collections::BTreeMap;
 use std::io::{self, Read, BufRead};
 
+use is_terminal::IsTerminal;
+use ansi_term::Colour::{Green, Purple};
+
 pub struct Lltsv<'a> {
     keys: Vec<&'a str>,
     ignore_key_set: HashSet<&'a str>,
     no_key: bool,
+    is_terminal: bool,
 }
 
 impl Lltsv<'_> {
@@ -18,11 +22,13 @@ impl Lltsv<'_> {
         for key in ignore_keys {
             ignore_key_set.insert(key);
         }
+        let is_terminal = std::io::stdout().is_terminal();
 
         Lltsv {
             keys,
             ignore_key_set,
             no_key,
+            is_terminal,
         }
     }
 
@@ -52,18 +58,22 @@ impl Lltsv<'_> {
             &self.keys
         };
         if self.no_key {
-            let mut selected = Vec::with_capacity(orders_ref.len());
+            let mut selected: Vec<&str> = Vec::with_capacity(orders_ref.len());
             for label_ref in orders_ref {
                 let value = lvs.get(label_ref).unwrap_or(&"");
                 selected.push(*value);
             }
             selected.join("\t")
         } else {
-            let mut selected = Vec::with_capacity(orders_ref.len());
+            let mut selected: Vec<String> = Vec::with_capacity(orders_ref.len());
             for label_ref in orders_ref {
                 let label = label_ref.to_string();
                 let value = lvs.get(label_ref).unwrap_or(&"");
-                selected.push(label + ":" + value);
+                if self.is_terminal {
+                    selected.push(format!("{}:{}", Green.paint(label), Purple.paint(*value)));
+                } else {
+                    selected.push(label + ":" + value);
+                }
             }
             selected.iter().map(|s| s.as_str()).collect::<Vec<&str>>().join("\t")
         }
