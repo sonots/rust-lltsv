@@ -3,6 +3,9 @@ use std::fs::File;
 extern crate clap;
 use clap::{App, Arg};
 
+mod lltsv;
+use lltsv::Lltsv;
+
 fn main() {
     let app = App::new("lltsv")
         .author("Naotoshi Seo <sonots@gmail.com>")
@@ -46,17 +49,19 @@ fn main() {
         }
     }
 
-    println!("keys: {:?}", keys);
-    println!("no_key: {:?}", no_key);
-    println!("ignore_keys: {:?}", ignore_keys);
+    let lltsv = Lltsv::new(keys, ignore_keys, no_key);
 
     if let Some(filenames) = matches.values_of("FILENAME") {
         for filename in filenames {
-            println!("filename: {}", filename);
             match File::open(filename) {
-                Ok(mut _file) => {
-                    // ファイルを読み込む処理をここに書く
-                    // ファイルはスコープを抜けると自動的に閉じられます
+                Ok(file) => {
+                    match lltsv.scan_and_write(file) {
+                        Ok(_) => {}
+                        Err(_e) => {
+                            eprintln!("failed to process `{}`.", filename);
+                            std::process::exit(1);
+                        }
+                    }
                 }
                 Err(_e) => {
                     eprintln!("failed to open and read `{}`.", filename);
@@ -65,8 +70,13 @@ fn main() {
             }
         }
     } else {
-        let _stdin = std::io::stdin();
-        // 標準入力から読み込む処理をここに書く
-        // stdinはスコープを抜けると自動的に閉じられます
+        let stdin = std::io::stdin();
+        match lltsv.scan_and_write(stdin.lock()) {
+            Ok(_) => {}
+            Err(_e) => {
+                eprintln!("failed to process stdin.");
+                std::process::exit(1);
+            }
+        }
     }
 }
