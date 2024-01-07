@@ -6,7 +6,6 @@ pub struct Lltsv<'a> {
     keys: Vec<&'a str>,
     ignore_key_set: HashSet<&'a str>,
     no_key: bool,
-    // func_append: tFuncAppend,
 }
 
 impl Lltsv<'_> {
@@ -85,5 +84,55 @@ impl Lltsv<'_> {
             lvs.insert(label, value);
         }
         lvs
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_ltsv() {
+        let lltsv = Lltsv::new(vec![], vec![], false);
+        let line = "key1:value1\tkey2:value2\tkey3:value3";
+        let expected: BTreeMap<&str, &str> = [
+            ("key1", "value1"),
+            ("key2", "value2"),
+            ("key3", "value3"),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        assert_eq!(lltsv.parse_ltsv(line), expected);
+    }
+
+    #[test]
+    fn test_restruct_ltsv_no_key() {
+        let lltsv = Lltsv::new(vec![], vec![], true);
+        let lvs: BTreeMap<&str, &str> = [
+            ("key1", "value1"),
+            ("key2", "value2"),
+            ("key3", "value3"),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        let expected = "value1\tvalue2\tvalue3";
+        assert_eq!(lltsv.restruct_ltsv(lvs), expected);
+    }
+
+    #[test]
+    fn test_restruct_ltsv_with_key() {
+        let lltsv = Lltsv::new(vec![], vec![], false);
+        let lvs: BTreeMap<&str, &str> = [
+            ("key1", "value1"),
+            ("key2", "value2"),
+            ("key3", "value3"),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        let expected = "key1:value1\tkey2:value2\tkey3:value3";
+        assert_eq!(lltsv.restruct_ltsv(lvs), expected);
     }
 }
