@@ -1,19 +1,19 @@
 # lltsv
 
-List specified keys of LTSV (Labeled Tab Separated Values)
+A CLI tool to list specified keys of LTSV (Labeled Tab Separated Values)
 
 # Description
 
 `lltsv` is a command line tool written in golang to list specified keys of LTSV (Labeled Tab Separated Values) text.
 
-Example 1: 
+Example 1:
 
 ```bash
 $ echo "foo:aaa\tbar:bbb\tbaz:ccc" | lltsv -k foo,bar
 foo:aaa   bar:bbb
 ```
 
-The output is colorized as default when you outputs to a terminal. 
+The output is colorized as default when you outputs to a terminal.
 The coloring is disabled if you pipe or redirect outputs.
 
 Example 2:
@@ -33,41 +33,9 @@ $ lltsv -k foo,bar -K file*.log
 
 Specify input files as arguments.
 
-Example4:
-
-```bash
-$ lltsv -k resptime,status,uri -f 'resptime > 6' access_log
-$ lltsv -k resptime,status,uri -f 'resptime > 6' -f 'uri =~ ^/foo' access_log
-```
-
-Filter output with "-f" option. Available comparing operators are:
-
-```
-  >= > == < <=  (arithmetic (float64))
-  == ==* != !=* (string comparison (string))
-  =~ !~ =~* !~* (regular expression (string))
-```
-
-The comparing operators terminated by __*__ behave in case-insensitive.
-
-You can specify multiple -f options (AND condition).
-
-Example5:
-
-```bash
-$ lltsv -k resptime,upstream_resptime,diff -e 'diff = resptime - upstream_resptime' access_log
-$ lltsv -k resptime,upstream_resptime,diff_ms -e 'diff_ms = (resptime - upstream_resptime) * 1000' access_log
-```
-
-Evaluate value with "-e" option. Available operators are:
-
-```
-  + - * / (arithmetic (float64))
-```
-
 **How Useful?**
 
-LTSV format is not `awk` friendly (I think), but `lltsv` can help it: 
+LTSV format is not `awk` friendly (I think), but `lltsv` can help it:
 
 ```bash
 $ echo -e "time:2014-08-13T14:10:10Z\tstatus:200\ntime:2014-08-13T14:10:12Z\tstatus:500" \
@@ -79,19 +47,13 @@ Useful!
 
 ## Installation
 
-Executable binaries are available at [releases](https://github.com/sonots/lltsv/releases).
+Executable binaries are available at [releases](https://github.com/sonots/rust-lltsv/releases).
 
-For example, for linux x86_64, 
+For example, for linux x86_64,
 
 ```bash
-$ wget https://github.com/sonots/lltsv/releases/download/v0.3.0/lltsv_linux_amd64 -O lltsv
+$ wget https://github.com/sonots/rust-lltsv/releases/download/v0.3.0/lltsv_linux_amd64 -O lltsv
 $ chmod a+x lltsv
-```
-
-If you have the go runtime installed, you may use go get. 
-
-```bash
-$ go get github.com/sonots/lltsv
 ```
 
 ## Usage
@@ -105,7 +67,7 @@ USAGE:
    lltsv [global options] command [command options] [arguments...]
 
 VERSION:
-   0.5.1
+   0.0.1
 
 AUTHOR(S):
    sonots <sonots@gmail.com>
@@ -117,8 +79,6 @@ GLOBAL OPTIONS:
    --key, -k                                            keys to output (multiple keys separated by ,)
    --no-key, -K                                         output without keys (and without color)
    --ignore-key value, -i value                         ignored keys to output (multiple keys separated by ,)
-   --filter, -f [--filter option --filter option]       filter expression to output
-   --expr, -e [--expr option --expr option]             evaluate value by expression to output
    --help, -h                                           show help
    --version, -v                                        print the version
 ```
@@ -129,41 +89,23 @@ GLOBAL OPTIONS:
 
 ## Build
 
-To build, use go get and make
+To build, use `cargo build`
 
 ```
-$ go get -d github.com/sonots/lltsv
-$ cd $GOPATH/src/github.com/sonots/lltsv
-$ make
-```
-
-To release binaries, I use [gox](https://github.com/mitchellh/gox) and [ghr](https://github.com/tcnksm/ghr)
-
-```
-go get github.com/mitchellh/gox
-gox -build-toolchain # only first time
-go get github.com/tcnksm/ghr
-
-mkdir -p pkg && cd pkg && gox ../...
-ghr vX.X.X .
+$ git clone git@github.com:sonots/rust-lltsv
+$ cd rust-lltsv
+$ cargo build
 ```
 
 ## Contribution
 
-1. Fork (https://github.com/sonots/lltsv/fork)
+1. Fork (https://github.com/sonots/rust-lltsv/fork)
 2. Create a feature branch
 3. Commit your changes
 4. Rebase your local changes against the master branch
-5. Run test suite with the go test ./... command and confirm that it passes
-6. Run gofmt -s
 7. Create new Pull Request
 
 ## Copyright
 
 See [LICENSE](./LICENSE)
 
-## Special Thanks
-
-This is a golang fork of perl version created by [id:key_amb](http://keyamb.hatenablog.com/). Thanks!
-
-MEMO: golang version was 5x faster than perl version
