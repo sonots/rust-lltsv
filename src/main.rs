@@ -37,7 +37,7 @@ fn main() {
 
     let mut keys = Vec::new();
     if let Some(k) = matches.value_of("key") {
-        keys = k.split(',').map(|s| s.to_string()).collect();
+        keys = k.split(',').collect();
     }
 
     let no_key = matches.is_present("no-key");
@@ -45,7 +45,7 @@ fn main() {
     let mut ignore_keys = Vec::new();
     if keys.is_empty() {
         if let Some(ik) = matches.value_of("ignore-key") {
-            ignore_keys = ik.split(',').map(|s| s.to_string()).collect();
+            ignore_keys = ik.split(',').collect();
         }
     }
 

@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 use std::io::{self, Read, BufRead};
 
-pub struct Lltsv {
-    keys: Vec<String>,
-    ignore_key_map: HashMap<String, ()>,
+pub struct Lltsv<'a> {
+    keys: Vec<&'a str>,
+    ignore_key_map: HashMap<&'a str, ()>,
     no_key: bool,
     // func_append: tFuncAppend,
 }
 
-impl Lltsv {
-    pub fn new(
-        keys: Vec<String>,
-        ignore_keys: Vec<String>,
+impl Lltsv<'_> {
+    pub fn new<'a>(
+        keys: Vec<&'a str>,
+        ignore_keys: Vec<&'a str>,
         no_key: bool,
-    ) -> Lltsv {
+    ) -> Lltsv<'a> {
         let mut ignore_key_map = HashMap::new();
         for key in ignore_keys {
             ignore_key_map.insert(key, ());
@@ -31,38 +31,41 @@ impl Lltsv {
 
         for line in reader.lines() {
             let line = line?;
-            let (lvs, keys) = self.parse_ltsv(&line);
-            let restructed = self.restruct_ltsv(lvs, keys);
+            let (lvs, labels) = self.parse_ltsv(&line);
+            let restructed = self.restruct_ltsv(lvs, labels);
             println!("{}", restructed);
         }
 
         Ok(())
     }
 
-    fn restruct_ltsv(&self, lvs: HashMap<String, String>, labels: Vec<String>) -> String {
+    fn restruct_ltsv(&self, lvs: HashMap<String, String>, labels: Vec<&str>) -> String {
         //  Sort in the order of -k, or follow the order of the input file.
-        let mut orders = self.keys.clone();
-        if self.keys.is_empty() {
-            orders = labels;
-        }
+        let orders = if self.keys.is_empty() {
+            &labels
+        } else {
+            &self.keys
+        };
         // Make vector with enough capacity so that push does not newly create object
         let mut selected = Vec::with_capacity(orders.len());
         let default_value = String::from("");
-        for label in orders {
-            if self.ignore_key_map.contains_key(&label) {
+        for label_ref in orders {
+            if self.ignore_key_map.contains_key(label_ref) {
                 continue;
             }
+            // TODO: any ways to avoid copying?
+            let label = label_ref.to_string();
             let value = lvs.get(&label).unwrap_or(&default_value);
             if self.no_key {
                 selected.push(value.to_string());
             } else {
-                selected.push(format!("{}:{}", label, value.to_string()));
+                selected.push(label + ":" + value);
             }
         }
-        selected.join("\t")
+        selected.iter().map(|s| s.as_str()).collect::<Vec<&str>>().join("\t")
     }
 
-    fn parse_ltsv(&self, line: &str) -> (HashMap<String, String>, Vec<String>) {
+    fn parse_ltsv<'a>(&'a self, line: &'a str) -> (HashMap<String, String>, Vec<&str>) {
         let columns: Vec<&str> = line.split('\t').collect();
         let mut lvs = HashMap::new();
         let mut labels = Vec::with_capacity(columns.len());
@@ -71,9 +74,9 @@ impl Lltsv {
             if lv.len() < 2 {
                 continue;
             }
-            let (label, value) = (lv[0].to_string(), lv[1].to_string());
-            labels.push(label.clone());
-            lvs.insert(label, value);
+            let (label, value) = (lv[0], lv[1]);
+            labels.push(label);
+            lvs.insert(label.to_string(), value.to_string());
         }
         (lvs, labels)
     }
