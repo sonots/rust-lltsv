@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::collections::BTreeMap;
-use std::io::{self, Read, BufRead};
+use std::io::{self, BufRead};
 
 use is_terminal::IsTerminal;
 use ansi_term::Colour::{Green, Purple};
@@ -22,7 +22,7 @@ impl Lltsv<'_> {
         for key in ignore_keys {
             ignore_key_set.insert(key);
         }
-        let is_terminal = std::io::stdout().is_terminal();
+        let is_terminal = io::stdout().is_terminal();
 
         Lltsv {
             keys,
@@ -32,7 +32,7 @@ impl Lltsv<'_> {
         }
     }
 
-    pub fn scan_and_write<R: Read>(&self, reader: R) -> io::Result<()> {
+    pub fn scan_and_write<R: io::Read>(&self, reader: R) -> io::Result<()> {
         let reader = io::BufReader::new(reader);
 
         for line in reader.lines() {
